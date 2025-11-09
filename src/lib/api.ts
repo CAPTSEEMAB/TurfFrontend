@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = 'http://54.91.121.46'
+const API_BASE_URL = 'http://54.91.242.212/'
 // const API_BASE_URL = 'http://localhost:3000'
 
 
