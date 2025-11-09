@@ -13,7 +13,7 @@ const About = () => {
           
           <div className="space-y-6">
             <p className="text-lg text-foreground/80">
-              TurfBook is your premier platform for discovering and booking sports facilities. 
+              NBA is your premier platform for discovering and booking sports facilities. 
               We connect sports enthusiasts with the best turfs and courts in their area.
             </p>
 
