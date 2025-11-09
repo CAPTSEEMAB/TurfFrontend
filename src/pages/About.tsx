@@ -9,7 +9,7 @@ const About = () => {
 
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <h1 className="text-4xl font-bold mb-6">About TurfBooksNBA</h1>
+          <h1 className="text-4xl font-bold mb-6">About NBA</h1>
           
           <div className="space-y-6">
             <p className="text-lg text-foreground/80">
