@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, Euro } from "lucide-react";
+import { MapPin, Clock, Euro, Phone, Mail, Map } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Carousel,
@@ -24,6 +24,8 @@ interface TurfCardProps {
   close_time?: string;
   is_active?: boolean;
   currency?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 const TurfCard = ({
@@ -38,6 +40,8 @@ const TurfCard = ({
   close_time,
   is_active,
   currency = "INR",
+  latitude,
+  longitude,
 }: TurfCardProps) => {
   const hoursDisplay = open_time && close_time ? `${open_time} - ${close_time}` : null;
 
@@ -117,7 +121,7 @@ const TurfCard = ({
           )}
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
         <Button 
           className="w-full gradient-primary hover:shadow-glow transition-spring hover:scale-105 font-medium" 
           asChild
@@ -126,6 +130,44 @@ const TurfCard = ({
             View Details
           </Link>
         </Button>
+        <div className="flex gap-2 w-full">
+          <Button 
+            variant="outline" 
+            className="flex-1 transition-spring hover:scale-105"
+            asChild
+          >
+            <a href="tel:+919876543210">
+              <Phone className="h-4 w-4 mr-2" />
+              Call
+            </a>
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex-1 transition-spring hover:scale-105"
+            asChild
+          >
+            <a href={`mailto:shaikhseemab10@gmail.com?subject=Inquiry about ${name}&body=Hi, I am interested in booking ${name} located at ${location}.`}>
+              <Mail className="h-4 w-4 mr-2" />
+              Email
+            </a>
+          </Button>
+        </div>
+        {latitude && longitude && (
+          <Button 
+            variant="secondary" 
+            className="w-full transition-spring hover:scale-105"
+            asChild
+          >
+            <a 
+              href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Map className="h-4 w-4 mr-2" />
+              View on Map
+            </a>
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

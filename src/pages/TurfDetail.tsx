@@ -13,7 +13,9 @@ import Autoplay from "embla-carousel-autoplay";
 import turfBanner from "@/assets/turf-banner.jpg";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, Euro, Users, Wifi } from "lucide-react";
+import { MapPin, Clock, Euro, Users, Wifi, Phone, Mail, Map, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { API_ENDPOINTS, apiFetch } from "@/lib/api";
 
 type Turf = {
@@ -135,6 +137,17 @@ const TurfDetail = () => {
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-5 w-5" />
                     <span>{turf.location}</span>
+                    {turf.latitude && turf.longitude && (
+                      <a
+                        href={`https://www.google.com/maps?q=${turf.latitude},${turf.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-2 text-primary hover:underline flex items-center gap-1 text-sm"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        View on Map
+                      </a>
+                    )}
                   </div>
                 </div>
                 {turf.is_active === false && (
@@ -242,6 +255,62 @@ const TurfDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Map Section */}
+            {turf.latitude && turf.longitude && (
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Map className="h-5 w-5 text-primary" />
+                    Location Map
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="aspect-video w-full overflow-hidden rounded-b-lg">
+                    <iframe
+                      title="Turf Location Map"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${turf.longitude - 0.01}%2C${turf.latitude - 0.01}%2C${turf.longitude + 0.01}%2C${turf.latitude + 0.01}&layer=mapnik&marker=${turf.latitude}%2C${turf.longitude}`}
+                    />
+                  </div>
+                  <div className="p-4 flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 transition-spring hover:scale-105"
+                      asChild
+                    >
+                      <a
+                        href={`https://www.google.com/maps?q=${turf.latitude},${turf.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open in Google Maps
+                      </a>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 transition-spring hover:scale-105"
+                      asChild
+                    >
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${turf.latitude},${turf.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MapPin className="h-4 w-4 mr-2" />
+                        Get Directions
+                      </a>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Pricing Info */}
@@ -255,11 +324,32 @@ const TurfDetail = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">per hour</p>
                 </div>
-                <div className="space-y-3 text-sm text-muted-foreground">
+                <div className="space-y-3 text-sm text-muted-foreground mb-6">
                   <p>• Premium quality turf</p>
                   <p>• Professional equipment available</p>
                   <p>• Easy booking process</p>
                   <p>• Flexible timing</p>
+                </div>
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full gradient-primary hover:shadow-glow transition-spring hover:scale-105" 
+                    asChild
+                  >
+                    <a href="tel:+919876543210">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call to Book
+                    </a>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full transition-spring hover:scale-105"
+                    asChild
+                  >
+                    <a href={`mailto:shaikhseemab10@gmail.com?subject=Booking Inquiry - ${turf.name}&body=Hi,%0D%0A%0D%0AI am interested in booking ${turf.name} located at ${turf.location}.%0D%0A%0D%0APlease let me know the availability and booking process.%0D%0A%0D%0AThank you.`}>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Send Email
+                    </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
