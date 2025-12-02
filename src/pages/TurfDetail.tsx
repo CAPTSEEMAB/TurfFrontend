@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useFetch } from "@/hooks/useApi";
+import { Turf } from "@/types";
+import { formatOperatingHours, getGoogleMapsUrl, getDirectionsUrl, getOsmEmbedUrl } from "@/lib/utils/helpers";
 import Navigation from "@/components/Navigation";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Carousel,
   CarouselContent,
@@ -15,86 +16,45 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Euro, Users, Wifi, Phone, Mail, Map, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { API_ENDPOINTS, apiFetch } from "@/lib/api";
+import { API_ENDPOINTS } from "@/lib/api";
+import { LoadingState, ErrorState } from "@/components/common/PageComponents";
 
-type Turf = {
-  id: string;
-  name: string;
-  location: string;
-  description?: string;
-  price_per_hour: number;
-  images?: string[];
-  amenities?: string[];
-  is_active?: boolean;
-  operating_hours?: any;
-  slot_minutes?: number;
-  open_time?: string;
-  close_time?: string;
-  currency?: string;
-  timezone?: string;
-  sport_type?: string;
-  surface_type?: string;
-  capacity?: number;
-  buffer_minutes?: number;
-  lead_time_minutes?: number;
-  bookable_days_ahead?: number;
-  latitude?: number;
-  longitude?: number;
-  created_at?: string;
-  updated_at?: string;
-};
+// Contact info - could be moved to config
+const CONTACT_EMAIL = 'shaikhseemab10@gmail.com';
+const CONTACT_PHONE = '+353894099278';
 
 const TurfDetail = () => {
   const { id: turfId } = useParams();
-  const navigate = useNavigate();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  
+  // Use custom hook for data fetching with auth
+  const { data, loading, error, refetch } = useFetch<Turf | { turf: Turf }>(
+    turfId ? `${API_ENDPOINTS.TURFS}/${turfId}` : ''
+  );
+  
+  // Handle nested response structure and ensure correct type
+  const turf: Turf | null = data 
+    ? (data as { turf?: Turf }).turf ?? (data as Turf)
+    : null;
 
-  const [turf, setTurf] = useState<Turf | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  // Fetch turf details
-  useEffect(() => {
-    if (authLoading) return;
-    
-    if (!isAuthenticated) {
-      navigate('/');
-      return;
-    }
-
-    if (!turfId) return;
-    setLoading(true);
-    setError("");
-    apiFetch(`${API_ENDPOINTS.TURFS}/${turfId}`)
-      .then((res) => {
-        if (res.status === 401) {
-          navigate('/');
-          return;
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data?.success) {
-          const t = data.data?.turf ?? data.data;
-          setTurf(t);
-        } else {
-          setError(data?.message || "Failed to fetch turf");
-        }
-      })
-      .catch(() => setError("Network error"))
-      .finally(() => setLoading(false));
-  }, [turfId, isAuthenticated, authLoading, navigate]);
-
-  const formatOperatingHours = () => {
-    if (!turf?.open_time || !turf?.close_time) return "N/A";
-    return `${turf.open_time} - ${turf.close_time}`;
-  };
-
-  if (!turfId) return <div>No turf selected.</div>;
-  if (loading) return <div>Loading turf details...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
-  if (!turf) return <div>No turf found.</div>;
+  if (!turfId) return <div className="p-8 text-center">No turf selected.</div>;
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <LoadingState message="Loading turf details..." />
+      </div>
+    );
+  }
+  
+  if (error || !turf) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <ErrorState message={error || "Turf not found"} onRetry={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -194,7 +154,7 @@ const TurfDetail = () => {
                 <div className="flex items-center gap-3 text-lg">
                   <Clock className="h-6 w-6 text-primary" />
                   <span className="font-medium">
-                    {formatOperatingHours()}
+                    {formatOperatingHours(turf.open_time, turf.close_time)}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">Open 7 days a week</p>
@@ -275,7 +235,7 @@ const TurfDetail = () => {
                       loading="lazy"
                       allowFullScreen
                       referrerPolicy="no-referrer-when-downgrade"
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${turf.longitude - 0.01}%2C${turf.latitude - 0.01}%2C${turf.longitude + 0.01}%2C${turf.latitude + 0.01}&layer=mapnik&marker=${turf.latitude}%2C${turf.longitude}`}
+                      src={getOsmEmbedUrl(turf.latitude, turf.longitude)}
                     />
                   </div>
                   <div className="p-4 flex gap-2">
@@ -285,7 +245,7 @@ const TurfDetail = () => {
                       asChild
                     >
                       <a
-                        href={`https://www.google.com/maps?q=${turf.latitude},${turf.longitude}`}
+                        href={getGoogleMapsUrl(turf.latitude, turf.longitude)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -299,7 +259,7 @@ const TurfDetail = () => {
                       asChild
                     >
                       <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${turf.latitude},${turf.longitude}`}
+                        href={getDirectionsUrl(turf.latitude, turf.longitude)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -335,7 +295,7 @@ const TurfDetail = () => {
                     className="w-full gradient-primary hover:shadow-glow transition-spring hover:scale-105" 
                     asChild
                   >
-                    <a href="tel:+919876543210">
+                    <a href={`tel:${CONTACT_PHONE}`}>
                       <Phone className="h-4 w-4 mr-2" />
                       Call to Book
                     </a>
@@ -345,7 +305,7 @@ const TurfDetail = () => {
                     className="w-full transition-spring hover:scale-105"
                     asChild
                   >
-                    <a href={`mailto:shaikhseemab10@gmail.com?subject=Booking Inquiry - ${turf.name}&body=Hi,%0D%0A%0D%0AI am interested in booking ${turf.name} located at ${turf.location}.%0D%0A%0D%0APlease let me know the availability and booking process.%0D%0A%0D%0AThank you.`}>
+                    <a href={`mailto:${CONTACT_EMAIL}?subject=Booking Inquiry - ${turf.name}&body=Hi,%0D%0A%0D%0AI am interested in booking ${turf.name} located at ${turf.location}.%0D%0A%0D%0APlease let me know the availability and booking process.%0D%0A%0D%0AThank you.`}>
                       <Mail className="h-4 w-4 mr-2" />
                       Send Email
                     </a>
